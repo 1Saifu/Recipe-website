@@ -17,7 +17,7 @@ recipeRouter.get('/:id', getRecipeById);
 recipeRouter.post('/', createRecipe);
 recipeRouter.put('/:id', updateRecipe);
 recipeRouter.delete('/:id', deleteRecipe);
-recipeRouter.pst('/:id/favorite', favoriteRecipe);
+recipeRouter.post('/:id/favorite', favoriteRecipe);
 recipeRouter.post('/:id/reviews', createReview);
 
 module.exports = recipeRouter;
