@@ -1,7 +1,9 @@
+require('dotenv').config();
+
 const app = require("../mongoose_server/server");
 const mongoose = require("mongoose");
 
-const uri = "mongodb+srv://saifukhan:Saifuvby1944@cluster-recipe.jd0lilx.mongodb.net/recipe-web?retryWrites=true&w=majority&appName=Cluster-recipe"
+const uri = process.env.MONGODB_URI;
 
 const { registerUser, loginUser } = require("../recipe/controllers/creator.controller");
 const { 
