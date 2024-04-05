@@ -1,7 +1,7 @@
 const app = require("../mongoose_server/server");
 const mongoose = require("mongoose");
 
-const uri = "mongodb://127.0.0.1:27017/web-recipe";
+const uri = "mongodb+srv://saifukhan:Saifuvby1944@cluster-recipe.jd0lilx.mongodb.net/recipe-web?retryWrites=true&w=majority&appName=Cluster-recipe"
 
 const { registerUser, loginUser } = require("../recipe/controllers/creator.controller");
 const { 
