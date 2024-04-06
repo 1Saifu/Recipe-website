@@ -13,3 +13,24 @@
   color: black;
 }
 
+h2{
+  font-size: 60px;
+  font-weight:500;
+}
+
+
+.button {
+  width: 100%;
+  border: none;
+  margin: 0px 10px;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-weight:500;
+  color: rgb(48, 48, 48);
+  cursor: pointer;
+}
+
+.button:hover{
+  background:rgb(48, 48, 48);
+  color: rgb(228, 228, 228);
+}
