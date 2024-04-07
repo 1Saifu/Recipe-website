@@ -1,11 +1,13 @@
 require('dotenv').config();
 
-const app = require("../mongoose_server/server");
 const mongoose = require("mongoose");
+const cors = require("cors");
+const express = require('express');
+const app = express();
 
 const uri = process.env.MONGODB_URI;
 
-const { registerUser, loginUser } = require("../recipe/controllers/creator.controller");
+const { registerUser, loginUser } = require("./controllers/creator.controller");
 const { 
     getAllRecipes, 
     getRecipeById, 
@@ -18,15 +20,19 @@ const {
 const User = require("../recipe/models/user");
 const Recipe = require("../recipe/models/recipe");
 
-const creatorRouter = require('../recipe/routes/creator.route');
-const recipeRouter = require('../recipe/routes/recipe.route');
+const creatorRouter = require('./routes/creator.route');
+const recipeRouter = require('./routes/recipe.route');
+
+app.use(express.json());
+app.use(cors());
 
 app.use("/creator", creatorRouter);
 app.use("/recipe", recipeRouter);
 
+
 async function connectToDatabase() {
     try {
-      await mongoose.connect(uri);
+      await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
       console.log("Connected to MongoDB");
     } catch (error) {
       console.error("Error connecting to MongoDB:", error);
@@ -34,3 +40,5 @@ async function connectToDatabase() {
   }
   
   connectToDatabase();
+
+  module.exports = app;
