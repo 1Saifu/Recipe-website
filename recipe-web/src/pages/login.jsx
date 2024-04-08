@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import Axios from "axios"
 
 const Login = () => {
 
@@ -14,9 +15,23 @@ const handlePassword = (e) => {
     setPassword(e.target.value);
 }
 
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+        const response = await Axios.post("http://localhost:8080/creator/login", {
+            email,
+            password,
+        });
+        console.log("Login successful:", response.data);
+    } catch (error) {
+        console.error("Login failed:", error.response.data.error);
+    }
+};
+
     return(
         <div>
             <h2>Sign in</h2>
+            <form onSubmit={handleSubmit}>
             <div className="form-container">
                 <div>
             <h6>Enter email</h6>
@@ -39,6 +54,7 @@ const handlePassword = (e) => {
             <button type="submit" className="log-button">Log in</button>
                 </div>
             </div>
+            </form>
         </div>
     )
 }

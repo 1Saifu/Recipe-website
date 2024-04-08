@@ -7,6 +7,6 @@ const recipeSchema = new mongoose.Schema({
     creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 })
 
-const Recipe = mongoose.model('Recipe', recipeSchema);
+const Recipe = mongoose.model('Recipe', recipeSchema, 'recipes');
 
 module.exports = Recipe;
