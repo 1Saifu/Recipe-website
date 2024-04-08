@@ -10,10 +10,6 @@ app.use(cors({
     origin: [`http://localhost:3000`, `http://127.0.0.1:3000`]
 }))
 
-app.get('/', (req, res) => {
-    res.send('Server is running.');
-  });
-
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

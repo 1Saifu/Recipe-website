@@ -41,4 +41,3 @@ async function connectToDatabase() {
   
   connectToDatabase();
 
-  module.exports = app;
