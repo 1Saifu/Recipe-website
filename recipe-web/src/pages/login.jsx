@@ -1,11 +1,13 @@
 import React from "react";
 import { useState } from "react";
-import Axios from "axios"
+import Axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
 
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
+const navigate = useNavigate();
 
 const handleEmail = (e) => {
     setEmail(e.target.value);
@@ -23,6 +25,8 @@ const handleSubmit = async (e) => {
             password,
         });
         console.log("Login successful:", response.data);
+        navigate("/Main");
+
     } catch (error) {
         console.error("Login failed:", error.response.data.error);
     }

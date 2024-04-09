@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import Axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
 
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const navigate = useNavigate();
 
     
     const handleUser = (e) => {
@@ -29,6 +31,7 @@ const Register = () => {
                 password
             });
             console.log('User registered:', response.data);
+            navigate("/Main");
         } catch (error) {
             console.error('Error registering user:', error);
         }
