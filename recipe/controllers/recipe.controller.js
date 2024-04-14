@@ -1,4 +1,5 @@
 const Recipe = require('../models/recipe')
+const Review = require('../models/review');
 
 async function getAllRecipes(req, res) {
     try {
@@ -60,11 +61,53 @@ async function deleteRecipe(req, res) {
 }
 
 async function favoriteRecipe(req, res) {
-    
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    try{
+        const recipe = await Recipe.findById(id);
+        if(!recipe) {
+            return res.status(404).json({ error: 'Recipe not found' });
+        }
+
+        const isFavorited = recipe.favorites.includes(userId);
+        if (isFavorited) {
+            return res.status(400).json({ error: 'Recipe already favorited' });
+        }
+
+        recipe.favorites.push(userId);
+        await recipe.save();
+
+        res.json({ message: 'Recipe favorited successfully' });
+
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
 }
 
 async function createReview(req, res) {
-    
+    const { id } = req.params;
+    const { text } = req.body;
+    const userId = req.user._id;
+
+    try{
+        const recipe = await Recipe.findById(id);
+        if(!recipe) {
+            return res.status(404).json({ error: 'Recipe not found' });
+        }
+
+        const review = new Review({
+            recipe: id,
+            user: userId,
+            text: text
+        });
+
+        await review.save();
+        res.status(201).json(review);
+
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
 }
 
 module.exports = {

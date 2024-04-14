@@ -1,5 +1,5 @@
 const Express = require('express');
-const { authenticateUser } = require('../middleware/creator.middleware')
+const { authMiddleware } = require('../middleware/creator.middleware')
 
 const {
     getAllRecipes,
@@ -15,10 +15,10 @@ const recipeRouter = Express.Router();
 
 recipeRouter.get('/', getAllRecipes);
 recipeRouter.get('/:id', getRecipeById);
-recipeRouter.post('/', authenticateUser, createRecipe);
-recipeRouter.put('/:id', authenticateUser, updateRecipe);
-recipeRouter.delete('/:id', authenticateUser, deleteRecipe);
-recipeRouter.post('/:id/favorite', authenticateUser, favoriteRecipe);
-recipeRouter.post('/:id/reviews', authenticateUser, createReview);
+recipeRouter.post('/', authMiddleware, createRecipe);
+recipeRouter.put('/:id', authMiddleware, updateRecipe);
+recipeRouter.delete('/:id', authMiddleware, deleteRecipe);
+recipeRouter.post('/:id/favorite', authMiddleware, favoriteRecipe);
+recipeRouter.post('/:id/reviews', authMiddleware, createReview);
 
 module.exports = recipeRouter;
