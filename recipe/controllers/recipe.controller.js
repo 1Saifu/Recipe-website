@@ -1,5 +1,6 @@
 const Recipe = require('../models/recipe')
 const Review = require('../models/review');
+const authMiddleware = require('../middleware/creator.middleware');
 
 async function getAllRecipes(req, res) {
     try {
@@ -23,10 +24,16 @@ async function getRecipeById(req, res) {
 }
 
 async function createRecipe(req, res) {
-    const { title, ingredients, instructions }= req.body;
-    const creatorId = req.user._id;
+    const { title, ingredients, instructions } = req.body;
+    const creatorId = req.userId;
+    const ingredientsArray = ingredients.split(",");
+
     try {
-        const recipe = await Recipe.create({ title, ingredients, instructions, creator: creatorId });
+        console.log("Creating recipe...");
+        console.log("Received recipe data:", { title, ingredients, instructions, creatorId });
+
+        const recipe = await Recipe.create({ title, ingredients: ingredientsArray, instructions, creator: creatorId });
+        console.log("Recipe created:", recipe);
         res.status(201).json(recipe)
     } catch(error) {
         res.status(500).json({ error: 'Internal server error' });
@@ -118,4 +125,6 @@ module.exports = {
     deleteRecipe,
     favoriteRecipe,
     createReview
-}
+};
+
+

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Axios from "axios";
 import { useNavigate } from "react-router-dom";
+import LocalStorageKit from "../utils/localStorageKit";
 
 const Register = () => {
 
@@ -25,11 +26,11 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await Axios.post('http://localhost:8080/creator/register', {
-                username,
-                email,
-                password
-            });
+            const response = await Axios.post('http://localhost:8080/creator/register', { username, email, password });
+            const { token } = response.data;
+            const localStorageKit = new LocalStorageKit();
+            localStorageKit.setTokenInStorage(token);
+
             console.log('User registered:', response.data);
             navigate("/Main");
         } catch (error) {

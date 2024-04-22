@@ -2,6 +2,7 @@ import React from "react";
 import { useState } from "react";
 import Axios from "axios";
 import { useNavigate } from "react-router-dom";
+import LocalStorageKit from "../utils/localStorageKit";
 
 const Login = () => {
 
@@ -20,17 +21,23 @@ const handlePassword = (e) => {
 const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        const response = await Axios.post("http://localhost:8080/creator/login", {
-            email,
-            password,
-        });
+        const response = await Axios.post("http://localhost:8080/creator/login", { email, password });
+        console.log("Login response:", response.data);
+        const { token, user } = response.data;
+        const userId = user._id;
+
+        const localStorageKit = new LocalStorageKit();
+        localStorageKit.setTokenInStorage(token);
+
         console.log("Login successful:", response.data);
-        navigate("/Main");
+        console.log("UserID:", userId);
+        navigate("/Main", { state: { userId: userId } });
 
     } catch (error) {
         console.error("Login failed:", error.response.data.error);
     }
 };
+
 
     return(
         <div>

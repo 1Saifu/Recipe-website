@@ -1,16 +1,26 @@
 const jwt = require('jsonwebtoken');
 
-// Function to generate access token
-function generateAccessToken(user) {
-    return jwt.sign({ userId: user.id }, 'your-access-secret', { expiresIn: '12h' });
-}
+const JWT_SECRET = process.env.JWT_SECRET || 'recipeToken';
 
-// Function to verify access token
-function verifyAccessToken(token) {
-    return jwt.verify(token, 'your-access-secret');
-}
+// Function to generate a JWT token
+const generateToken = (userId) => {
+    console.log('Generating token for userId:', userId);
+    try {
+        const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
+        console.log('Token generated successfully:', token);
+        return token;
+    } catch (error) {
+        console.error('Error generating token:', error);
+        throw error;
+    }
+};
+
+// Function to verify an access token
+const verifyAccessToken = (token) => {
+    return jwt.verify(token, JWT_SECRET);
+};
 
 module.exports = {
-    generateAccessToken,
+    generateToken,
     verifyAccessToken
 };

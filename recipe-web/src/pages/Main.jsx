@@ -5,14 +5,16 @@ import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
+import { useLocation } from "react-router-dom";
 
 const Main = () => {
 
 const [recipes, setRecipes] = useState([]);
 const [title, setTitle] = useState("");
-const [ingredients, setIngredients] = useState("");
+const [ingredients, setIngredients] = useState([]);
 const [instructions, setInstructions] = useState("");
 const [showModal, setShowModal] = useState(false);
+const { state } = useLocation();
 
 const handleCloseModal = () => setShowModal(false);
 const handleShowModal = () => setShowModal(true);
@@ -32,16 +34,26 @@ const fetchRecipe = async () => {
 }
 
 const createRecipe = async () => {
+    const creatorId = state?.userId;
+    console.log("Creating recipe...");
     try{
+
+        console.log("Title:", title);
+        console.log("Ingredients:", ingredients);
+        console.log("Instructions:", instructions);
+        console.log("creatorID:", creatorId);
+
         const response = await Axios.post("http://localhost:8080/recipe", {
             title,
             ingredients: ingredients.split(","),
             instructions,
+            creatorId
         })
+        console.log("Recipe created:", response.data);
         const newRecipe = response.data;
         setRecipes([...recipes, newRecipe]);
         setTitle(""); 
-        setIngredients("");
+        setIngredients([]);
         setInstructions("");
     }
     catch(error){
@@ -126,6 +138,6 @@ const deleteRecipe = async (id) => {
         </div>
         </div>
     )
-} 
+}
 
 export default Main;
