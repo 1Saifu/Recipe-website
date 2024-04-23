@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const Home = () => {
     return(
         <div>
-            <h2>Recipe Website</h2>
+            <h2 style={{ fontSize: '60px', fontWeight: '200' }}>Recipe Website</h2>
              <Link to="/pages/Login"> 
                 <button className="button">sign in</button> 
              </Link>

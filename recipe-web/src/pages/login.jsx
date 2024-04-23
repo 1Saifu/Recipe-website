@@ -22,7 +22,6 @@ const handleSubmit = async (e) => {
     e.preventDefault();
     try {
         const response = await Axios.post("http://localhost:8080/creator/login", { email, password });
-        console.log("Login response:", response.data);
         const { token, user } = response.data;
         const userId = user._id;
 
@@ -30,7 +29,9 @@ const handleSubmit = async (e) => {
         localStorageKit.setTokenInStorage(token);
 
         console.log("Login successful:", response.data);
-        console.log("UserID:", userId);
+
+        Axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
         navigate("/Main", { state: { userId: userId } });
 
     } catch (error) {

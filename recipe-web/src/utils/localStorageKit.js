@@ -1,12 +1,13 @@
 // localStorageKit.js
 class LocalStorageKit {
     constructor(tokenKey) {
-        this.STORAGE_TOKEN_KEY = tokenKey || 'DEFAULT_STORAGE_TOKEN_KEY';
+        this.tokenKey = tokenKey || 'accessToken';
     }
 
     setTokenInStorage(token) {
         try {
-            localStorage.setItem(this.STORAGE_TOKEN_KEY, JSON.stringify(token));
+            localStorage.setItem(this.tokenKey, token);
+            console.log('Token stored successfully:', token);
         } catch (error) {
             console.error('Error storing token in localStorage:', error);
         }
@@ -14,18 +15,19 @@ class LocalStorageKit {
 
     getTokenFromStorage() {
         try {
-            const token = localStorage.getItem(this.STORAGE_TOKEN_KEY);
-            if (token) {
-                return JSON.parse(token);
-            }
+            const token = localStorage.getItem(this.tokenKey);
+            console.log('Token retrieved from localStorage:', token);
+            return token;
         } catch (error) {
             console.error('Error retrieving token from localStorage:', error);
+            return null;
         }
     }
 
     deleteTokenFromStorage() {
         try {
-            localStorage.removeItem(this.STORAGE_TOKEN_KEY);
+            localStorage.removeItem(this.tokenKey);
+            console.log('Token deleted from localStorage');
         } catch (error) {
             console.error('Error deleting token from localStorage:', error);
         }

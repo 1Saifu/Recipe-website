@@ -27,12 +27,14 @@ const Register = () => {
         e.preventDefault();
         try {
             const response = await Axios.post('http://localhost:8080/creator/register', { username, email, password });
-            const { token } = response.data;
+            const { token, user } = response.data;
+            const userId = user._id;
+
             const localStorageKit = new LocalStorageKit();
             localStorageKit.setTokenInStorage(token);
 
             console.log('User registered:', response.data);
-            navigate("/Main");
+            navigate("/Main", { state: { userId: userId } });
         } catch (error) {
             console.error('Error registering user:', error);
         }

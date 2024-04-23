@@ -1,29 +1,28 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/user')
-const { verifyAccessToken } = require('../utils/token');
+const { verifyAccessToken } = require("../utils/token");
 
 const authMiddleware = (req, res, next) => {
-    // Extract the authorization token from the request headers
-    const token = req.headers.authorization;
+    const token = req.headers.authorization || "";
+    const accessToken = token.split(" ")?.[1] || "";
 
-    if (!token) {
-        return res.status(401).json({ error: 'Authorization token missing' });
+    console.log("Authorization token:", accessToken);
+
+    if (!accessToken) {
+        return res.status(401).json({
+            message: "Authorization token missing"
+        });
     }
 
     try {
-        // Verify the access token
-        const decoded = verifyAccessToken(token);
-
-        // Attach the user ID to the request for future use
-        req.userId = decoded.userId;
-
-        // Call next to proceed to the next middleware or route handler
-        next();
+        const verifiedToken = verifyAccessToken(accessToken);
+        console.log("Verified token:", verifiedToken);
+        req.userId = verifiedToken.userId;
+        return next();
     } catch (error) {
-        // If token is invalid or expired, return an error
-        res.status(401).json({ error: 'Invalid or expired token' });
+        return res.status(401).json({
+            message: "Invalid or expired token"
+        });
     }
 };
 
-
 module.exports = authMiddleware;
+

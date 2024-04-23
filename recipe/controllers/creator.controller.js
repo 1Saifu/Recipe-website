@@ -1,12 +1,10 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
-const { generateToken } = require('../utils/token');
+const { generateToken, generateRefreshToken } = require('../utils/token');
 
 async function registerUser(req, res) {
     const { username, email, password } = req.body;
     try { 
-
-        console.log("Password received for registration:", password);
 
         const existingUser = await User.findOne({ email });
         if(existingUser) {
@@ -20,8 +18,9 @@ async function registerUser(req, res) {
         
         console.log("Generating token for new user:", email);
         const token = generateToken(newUser._id);
+        const refreshToken = generateRefreshToken(newUser._id);
 
-        res.status(201).json({ user: newUser, token });
+        res.status(201).json({ user: newUser, token, refreshToken });
     } catch(error) {
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -44,8 +43,9 @@ async function loginUser(req, res) {
 
         console.log("Generating token for user:", email);
         const token = generateToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
 
-        res.json({ user, token });
+        res.json({ user, token, refreshToken });
     } catch(error) {
         console.error("Error occurred during login:", error);
     res.status(500).json({ error: 'Internal server error' });
