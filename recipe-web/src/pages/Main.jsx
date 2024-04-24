@@ -15,6 +15,7 @@ const [title, setTitle] = useState("");
 const [ingredients, setIngredients] = useState([]);
 const [instructions, setInstructions] = useState("");
 const [showModal, setShowModal] = useState(false);
+const [selectedRecipeId, setSelectedRecipeId] = useState(null);
 const { state } = useLocation();
 
 const handleCloseModal = () => setShowModal(false);
@@ -23,6 +24,19 @@ const handleShowModal = () => setShowModal(true);
 useEffect(() => {
     fetchRecipe();
 }, [])
+
+useEffect(() => {
+    if (state?.updatedRecipe) {
+        // Update the state when a recipe is updated
+        setRecipes(prevRecipes => prevRecipes.map(recipe =>
+            recipe._id === state.updatedRecipe._id ? state.updatedRecipe : recipe
+        ));
+    }
+    if (state?.deletedRecipeId) {
+        // Remove the deleted recipe from the state
+        setRecipes(prevRecipes => prevRecipes.filter(recipe => recipe._id !== state.deletedRecipeId));
+    }
+}, [state]);
 
 const fetchRecipe = async () => {
     try{
@@ -58,42 +72,48 @@ const createRecipe = async () => {
             }
         });
         console.log("Recipe created:", response.data);
-        const newRecipe = response.data;
-        setRecipes([...recipes, newRecipe]);
+        // const newRecipe = response.data;
+        setRecipes(prevRecipes => [...prevRecipes, response.data]); // Add the new recipe to the state
         setTitle(""); 
         setIngredients([]);
         setInstructions("");
+        setShowModal(false);
     } catch (error) {
         console.error("Error creating recipes:", error);
     }
 };
 
 
-const updateRecipe = async (id) => {
-    try{
-        const response = await Axios.put(`http://localhost:8080/recipe/${id}`, {
+const updateRecipe = async () => {
+    try {
+        const response = await Axios.put(`http://localhost:8080/recipe/${selectedRecipeId}`, {
             title,
-            ingredients: ingredients.split(","),
+            ingredients,
             instructions,
-        })
-        const updatedRecipes = recipes.map(recipe => {
-            if(recipe._id === id){
-                return response.data
-            }
-            return recipe;
-        })
-        setRecipes(updatedRecipes)
+        });
+        setRecipes(prevRecipes =>
+            prevRecipes.map(recipe =>
+                recipe._id === selectedRecipeId ? response.data : recipe
+            )
+        ); // Update the state with the updated recipe
+        handleCloseModal(); // Close the modal after updating the recipe
+    } catch (error) {
+        console.error("Error updating recipe:", error);
     }
-    catch(error){
-        console.error("Error updating recipes:", error);
-    }
-}
+};
+
+const handleUpdateClick = (recipeId, recipeTitle, recipeIngredients, recipeInstructions) => {
+    setSelectedRecipeId(recipeId);
+    setTitle(recipeTitle);
+    setIngredients(recipeIngredients);
+    setInstructions(recipeInstructions);
+    handleShowModal();
+};
 
 const deleteRecipe = async (id) => {
     try{
         await Axios.delete(`http://localhost:8080/recipe/${id}`);
-        const filteredRecipes = recipes.filter(recipe => recipe._id !== id);
-        setRecipes(filteredRecipes);
+        setRecipes(prevRecipes => prevRecipes.filter(recipe => recipe._id !== id));
     }
     catch(error){
         console.error("Error deleting recipes:", error);
@@ -113,8 +133,12 @@ const deleteRecipe = async (id) => {
                         <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px' }}> <strong>Instructions:</strong> {recipe.instructions} </Card.Text>
                     </Card.Body>
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 15px 10px 15px' }}>
-                    <Button className="customButton" onClick={() => updateRecipe(recipe._id)}>Update</Button>
-                    <Button className="customButton" onClick={() => deleteRecipe(recipe._id)}>Delete</Button>
+                    {state?.userId === recipe.creator &&
+                        <>
+                        <Button className="customButton" onClick={() => handleUpdateClick(recipe._id, recipe.title, recipe.ingredients, recipe.instructions)}>Update</Button>
+                        <Button className="customButton" onClick={() => deleteRecipe(recipe._id)}>Delete</Button>
+                        </>
+                    }
                     </div>
                 </Card>
             ))}
@@ -143,7 +167,9 @@ const deleteRecipe = async (id) => {
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={handleCloseModal}>Close</Button>
-                        <Button variant="primary" onClick={createRecipe}>Create Recipe</Button>
+                        <Button variant="primary" onClick={selectedRecipeId ? updateRecipe : createRecipe}>
+                        {selectedRecipeId ? "Update Recipe" : "Create Recipe"}
+                        </Button>
                     </Modal.Footer>
                 </Modal>
         </div>
