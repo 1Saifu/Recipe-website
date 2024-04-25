@@ -1,8 +1,8 @@
 const { verifyAccessToken } = require("../utils/token");
 
 const authMiddleware = (req, res, next) => {
-    const token = req.headers.authorization || "";
-    const accessToken = token.split(" ")?.[1] || "";
+    const token = req.headers.authorization;
+    const accessToken = token.split(" ")[1];
 
     console.log("Authorization token:", accessToken);
 

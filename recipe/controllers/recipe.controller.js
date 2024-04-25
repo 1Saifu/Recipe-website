@@ -1,5 +1,6 @@
 const Recipe = require('../models/recipe')
 const Review = require('../models/review');
+const User = require('../models/user');
 
 async function getAllRecipes(req, res) {
     try {
@@ -73,7 +74,7 @@ async function deleteRecipe(req, res) {
 
 async function favoriteRecipe(req, res) {
     const { id } = req.params;
-    const userId = req.user._id;
+    const userId = req.userId;
 
     try{
         const recipe = await Recipe.findById(id);
@@ -99,24 +100,54 @@ async function favoriteRecipe(req, res) {
 async function createReview(req, res) {
     const { id } = req.params;
     const { text } = req.body;
-    const userId = req.user._id;
 
+    console.log("Recipe ID:", id);
+    console.log("Review Text:", text);
+    console.log("User ID:", req.userId);
+    
     try{
+        const userId = req.userId;
         const recipe = await Recipe.findById(id);
         if(!recipe) {
             return res.status(404).json({ error: 'Recipe not found' });
         }
 
+        const user = await User.findById(userId); // Fetch the user data
+        console.log("Fetched user:", user);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
         const review = new Review({
             recipe: id,
             user: userId,
-            text: text
+            text: text,
+            username: user.username 
         });
 
         await review.save();
-        res.status(201).json(review);
+        res.status(201).json({
+            ...review.toJSON(),
+            username: user.username 
+        });
 
     } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+async function getRecipeReviews(req, res) {
+    const { id } = req.params;
+    try {
+        const recipe = await Recipe.findById(id);
+        if (!recipe) {
+            return res.status(404).json({ error: 'Recipe not found' });
+        }
+        // Fetch the reviews for the recipe
+        const reviews = await Review.find({ recipe: id }).populate('user', 'username');
+        res.json(reviews);
+    } catch (error) {
+        console.error("Error fetching reviews:", error);
         res.status(500).json({ error: 'Internal server error' });
     }
 }
@@ -128,7 +159,8 @@ module.exports = {
     updateRecipe,
     deleteRecipe,
     favoriteRecipe,
-    createReview
+    createReview,
+    getRecipeReviews
 };
 
 

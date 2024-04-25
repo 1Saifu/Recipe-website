@@ -34,6 +34,9 @@ const Register = () => {
             localStorageKit.setTokenInStorage(token);
 
             console.log('User registered:', response.data);
+
+            Axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
             navigate("/Main", { state: { userId: userId } });
         } catch (error) {
             console.error('Error registering user:', error);

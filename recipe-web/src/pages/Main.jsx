@@ -14,8 +14,11 @@ const [recipes, setRecipes] = useState([]);
 const [title, setTitle] = useState("");
 const [ingredients, setIngredients] = useState([]);
 const [instructions, setInstructions] = useState("");
+const [reviewText, setReviewText] = useState("");
 const [showModal, setShowModal] = useState(false);
 const [selectedRecipeId, setSelectedRecipeId] = useState(null);
+const [showReviewModal, setShowReviewModal] = useState(false);
+const [selectedRecipeReviews, setSelectedRecipeReviews] = useState([]);
 const { state } = useLocation();
 
 const handleCloseModal = () => setShowModal(false);
@@ -27,13 +30,11 @@ useEffect(() => {
 
 useEffect(() => {
     if (state?.updatedRecipe) {
-        // Update the state when a recipe is updated
         setRecipes(prevRecipes => prevRecipes.map(recipe =>
             recipe._id === state.updatedRecipe._id ? state.updatedRecipe : recipe
         ));
     }
     if (state?.deletedRecipeId) {
-        // Remove the deleted recipe from the state
         setRecipes(prevRecipes => prevRecipes.filter(recipe => recipe._id !== state.deletedRecipeId));
     }
 }, [state]);
@@ -72,8 +73,7 @@ const createRecipe = async () => {
             }
         });
         console.log("Recipe created:", response.data);
-        // const newRecipe = response.data;
-        setRecipes(prevRecipes => [...prevRecipes, response.data]); // Add the new recipe to the state
+        setRecipes(prevRecipes => [...prevRecipes, response.data]); 
         setTitle(""); 
         setIngredients([]);
         setInstructions("");
@@ -95,8 +95,8 @@ const updateRecipe = async () => {
             prevRecipes.map(recipe =>
                 recipe._id === selectedRecipeId ? response.data : recipe
             )
-        ); // Update the state with the updated recipe
-        handleCloseModal(); // Close the modal after updating the recipe
+        ); 
+        handleCloseModal(); 
     } catch (error) {
         console.error("Error updating recipe:", error);
     }
@@ -120,6 +120,54 @@ const deleteRecipe = async (id) => {
     }
 }
 
+const fetchRecipeReviews = async (recipeId) => {
+    try {
+        const response = await Axios.get(`http://localhost:8080/recipe/${recipeId}/reviews`);
+
+        setSelectedRecipeReviews(response.data);
+
+        setShowReviewModal(true);
+    } catch (error) {
+        console.error("Error fetching recipe reviews:", error);
+    }
+};
+
+const handleShowReviewModal = (recipeId) => {
+    setSelectedRecipeId(recipeId);
+    fetchRecipeReviews(recipeId); // Fetch reviews for the selected recipe
+    setShowReviewModal(true);
+};
+
+const handleCloseReviewModal = () => {
+    setShowReviewModal(false);
+    setSelectedRecipeId(null);
+    setSelectedRecipeReviews([]);
+};
+
+const handleReviewSubmit = async (recipeId) => {
+    try {
+        console.log("Submitting review...");
+
+        const token = localStorage.getItem("accessToken");
+
+        const response = await Axios.post(`http://localhost:8080/recipe/${recipeId}/reviews`, {
+            text: reviewText
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        setSelectedRecipeReviews(prevReviews => [...prevReviews, response.data]);
+
+        setReviewText(""); 
+        await fetchRecipeReviews(recipeId);
+    } catch (error) {
+        console.error("Error creating review:", error);
+    }
+};
+
+
     return(
         <div>
         <h2 style={{ fontSize: '60px', fontWeight: '200' }}>Recipes</h2>
@@ -140,10 +188,49 @@ const deleteRecipe = async (id) => {
                         </>
                     }
                     </div>
-                </Card>
-            ))}
-        </div>
-        <div>
+                    
+                    {state?.userId && (
+                            <div style={{ padding: '0 15px 10px 15px' }}>
+                                <Button variant="primary" onClick={() => handleShowReviewModal(recipe._id)}>Review</Button>
+                            </div>
+                        )}
+                    </Card>
+                ))}
+            </div>
+
+            <Modal show={showReviewModal} onHide={handleCloseReviewModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Reviews</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div>
+                        {selectedRecipeReviews.map(review => (
+                            <div key={review._id}>
+                                <p><strong>{review.user.username}</strong>: {review.text}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <Form onSubmit={(e) => {
+                        e.preventDefault();
+                        handleReviewSubmit(selectedRecipeId);
+                    }}>
+                        <Form.Group controlId={`formReview-${selectedRecipeId}`}>
+                            <Form.Label>Write a review</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={reviewText}
+                                onChange={(e) => {
+                                    setReviewText(e.target.value);
+                                }}
+                                placeholder="Enter your review"
+                            />
+                        </Form.Group>
+                        <Button variant="primary" type="submit">Submit Review</Button>
+                    </Form>
+                </Modal.Body>
+            </Modal>
+
+            <div>
         <Button variant="primary" onClick={handleShowModal}>Create New Recipe</Button>
                 <Modal show={showModal} onHide={handleCloseModal}>
                     <Modal.Header closeButton>
