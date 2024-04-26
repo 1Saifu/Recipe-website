@@ -2,15 +2,16 @@ const { verifyAccessToken } = require("../utils/token");
 
 const authMiddleware = (req, res, next) => {
     const token = req.headers.authorization;
-    const accessToken = token.split(" ")[1];
 
-    console.log("Authorization token:", accessToken);
-
-    if (!accessToken) {
+    if (!token) {
         return res.status(401).json({
             message: "Authorization token missing"
         });
     }
+
+    const accessToken = token.split(" ")[1];
+
+    console.log("Authorization token:", accessToken);
 
     try {
         const verifiedToken = verifyAccessToken(accessToken);

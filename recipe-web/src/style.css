@@ -8,3 +8,27 @@
     background-color: #A9A9A9;
     border-color: #A9A9A9;
   }
+
+  .card-title {
+    font-family: 'Dancing Script';
+    color: #B8860B; /* Gold color */
+    border-bottom: 2px solid #B8860B; /* Underline */
+    padding-bottom: 5px; /* Adjust spacing */
+}
+
+.button2 {
+  width: 100%;
+  border: none;
+  margin: 0px 10px;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-weight:500;
+  background-color: #f0f0f0;
+  color: rgb(48, 48, 48);
+  cursor: pointer;
+}
+
+.button2:hover{
+  background:rgb(48, 48, 48);
+  color: rgb(228, 228, 228);
+}

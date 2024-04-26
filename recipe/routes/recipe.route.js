@@ -14,6 +14,7 @@ const authMiddleware = require('../middleware/creator.middleware');
 
 const recipeRouter = Express.Router();
 
+recipeRouter.get('/', getAllRecipes);
 recipeRouter.get('/', authMiddleware, getAllRecipes);
 recipeRouter.get('/:id', authMiddleware, getRecipeById);
 recipeRouter.post('/', authMiddleware, createRecipe);

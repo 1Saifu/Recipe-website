@@ -5,7 +5,8 @@ import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
-import { useLocation } from "react-router-dom";
+import Pagination from 'react-bootstrap/Pagination';
+import { useLocation, useNavigate } from "react-router-dom";
 import "../style.css";
 
 const Main = () => {
@@ -19,7 +20,10 @@ const [showModal, setShowModal] = useState(false);
 const [selectedRecipeId, setSelectedRecipeId] = useState(null);
 const [showReviewModal, setShowReviewModal] = useState(false);
 const [selectedRecipeReviews, setSelectedRecipeReviews] = useState([]);
+const navigate = useNavigate();
 const { state } = useLocation();
+const [currentPage, setCurrentPage] = useState(1);
+const [recipesPerPage] = useState(9);
 
 const handleCloseModal = () => setShowModal(false);
 const handleShowModal = () => setShowModal(true);
@@ -27,6 +31,11 @@ const handleShowModal = () => setShowModal(true);
 useEffect(() => {
     fetchRecipe();
 }, [])
+
+const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    navigate("/"); 
+};
 
 useEffect(() => {
     if (state?.updatedRecipe) {
@@ -49,15 +58,18 @@ const fetchRecipe = async () => {
     }
 }
 
+const lastRecipeIndex = currentPage * recipesPerPage;
+const firstRecipeIndex = lastRecipeIndex - recipesPerPage;
+const currentRecipes = recipes.slice(firstRecipeIndex, lastRecipeIndex);
+
+const totalPages = Math.ceil(recipes.length / recipesPerPage);
+
+const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+
 const createRecipe = async () => {
     const creatorId = state?.userId;
-    console.log("Creating recipe...");
     try {
-        console.log("Title:", title);
-        console.log("Ingredients:", ingredients);
-        console.log("Instructions:", instructions);
-        console.log("creatorID:", creatorId);
-
         const token = localStorage.getItem("accessToken"); 
 
         const ingredientsString = ingredients.toString();
@@ -134,7 +146,7 @@ const fetchRecipeReviews = async (recipeId) => {
 
 const handleShowReviewModal = (recipeId) => {
     setSelectedRecipeId(recipeId);
-    fetchRecipeReviews(recipeId); // Fetch reviews for the selected recipe
+    fetchRecipeReviews(recipeId); 
     setShowReviewModal(true);
 };
 
@@ -168,12 +180,17 @@ const handleReviewSubmit = async (recipeId) => {
 };
 
 
-    return(
-        <div>
+return (
+    <div>
         <h2 style={{ fontSize: '60px', fontWeight: '200' }}>Recipes</h2>
+        <Button variant="primary" style={{ fontSize: '14px', padding: '6px 12px', width: '200px' }} className="button2" onClick={handleLogout}>Logout</Button>
         <br />
-        <div className="d-flex justify-content-around flex-wrap" >
-            {recipes.map((recipe) => (
+        <br />
+        <Button variant="primary" onClick={handleShowModal}>Create New Recipe</Button>
+        <br />
+        <br />
+        <div className="d-flex justify-content-around flex-wrap">
+            {currentRecipes.map((recipe) => (
                 <Card key={recipe._id} style={{ width: '18rem', margin: '0 10px 20px 10px', boxShadow: '0px 8px 16px rgba(0, 0, 0, 2)' }}>
                     <Card.Body>
                         <Card.Title style={{ fontFamily: 'Dancing Script', color:'#B8860B' }}>{recipe.title}</Card.Title>
@@ -191,77 +208,93 @@ const handleReviewSubmit = async (recipeId) => {
                     
                     {state?.userId && (
                             <div style={{ padding: '0 15px 10px 15px' }}>
-                                <Button variant="primary" onClick={() => handleShowReviewModal(recipe._id)}>Review</Button>
+                                <Button variant="primary" className="customButton" onClick={() => handleShowReviewModal(recipe._id)}>Review</Button>
                             </div>
                         )}
                     </Card>
                 ))}
-            </div>
+        </div>
 
-            <Modal show={showReviewModal} onHide={handleCloseReviewModal}>
+        <Pagination className="d-flex justify-content-center">
+    {currentPage > 1 && (
+        <Pagination.Prev onClick={() => paginate(currentPage - 1)} />
+    )}
+    {Array.from({ length: totalPages }, (_, index) => (
+        <Pagination.Item key={index + 1} active={index + 1 === currentPage} onClick={() => paginate(index + 1)}>
+            {index + 1}
+        </Pagination.Item>
+    ))}
+    {currentPage < totalPages && (
+        <Pagination.Next onClick={() => paginate(currentPage + 1)} />
+    )}
+</Pagination>
+
+
+        <Modal show={showReviewModal} onHide={handleCloseReviewModal}>
+            <Modal.Header closeButton>
+                <Modal.Title>Reviews</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <div>
+                    {selectedRecipeReviews.map(review => (
+                        <div key={review._id}>
+                            <p><strong>{review.user.username}</strong>: {review.text}</p>
+                        </div>
+                    ))}
+                </div>
+                <Form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleReviewSubmit(selectedRecipeId);
+                }}>
+                    <Form.Group controlId={`formReview-${selectedRecipeId}`}>
+                        <Form.Label>Write a review</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={reviewText}
+                            onChange={(e) => {
+                                setReviewText(e.target.value);
+                            }}
+                            placeholder="Enter your review"
+                        />
+                    </Form.Group>
+                    <br />
+                    <Button variant="primary" type="submit">Submit Review</Button>
+                </Form>
+            </Modal.Body>
+        </Modal>
+
+        <div>
+            <Modal show={showModal} onHide={handleCloseModal}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Reviews</Modal.Title>
+                    <Modal.Title>Create New Recipe</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <div>
-                        {selectedRecipeReviews.map(review => (
-                            <div key={review._id}>
-                                <p><strong>{review.user.username}</strong>: {review.text}</p>
-                            </div>
-                        ))}
-                    </div>
-                    <Form onSubmit={(e) => {
-                        e.preventDefault();
-                        handleReviewSubmit(selectedRecipeId);
-                    }}>
-                        <Form.Group controlId={`formReview-${selectedRecipeId}`}>
-                            <Form.Label>Write a review</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={reviewText}
-                                onChange={(e) => {
-                                    setReviewText(e.target.value);
-                                }}
-                                placeholder="Enter your review"
-                            />
+                    <Form>
+                        <Form.Group controlId="formTitle">
+                            <Form.Label>Title</Form.Label>
+                            <Form.Control type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter title" />
                         </Form.Group>
-                        <Button variant="primary" type="submit">Submit Review</Button>
+                        <Form.Group controlId="formIngredients">
+                            <Form.Label>Ingredients</Form.Label>
+                            <Form.Control type="text" value={ingredients} onChange={(e) => setIngredients(e.target.value)} placeholder="Enter ingredients (comma separated)" />
+                        </Form.Group>
+                        <Form.Group controlId="formInstructions">
+                            <Form.Label>Instructions</Form.Label>
+                            <Form.Control as="textarea" rows={3} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Enter instructions" />
+                        </Form.Group>
                     </Form>
                 </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>Close</Button>
+                    <Button variant="primary" onClick={selectedRecipeId ? updateRecipe : createRecipe}>
+                    {selectedRecipeId ? "Update Recipe" : "Create Recipe"}
+                    </Button>
+                </Modal.Footer>
             </Modal>
+        </div>
+    </div>
+);
 
-            <div>
-        <Button variant="primary" onClick={handleShowModal}>Create New Recipe</Button>
-                <Modal show={showModal} onHide={handleCloseModal}>
-                    <Modal.Header closeButton>
-                        <Modal.Title>Create New Recipe</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <Form>
-                            <Form.Group controlId="formTitle">
-                                <Form.Label>Title</Form.Label>
-                                <Form.Control type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter title" />
-                            </Form.Group>
-                            <Form.Group controlId="formIngredients">
-                                <Form.Label>Ingredients</Form.Label>
-                                <Form.Control type="text" value={ingredients} onChange={(e) => setIngredients(e.target.value)} placeholder="Enter ingredients (comma separated)" />
-                            </Form.Group>
-                            <Form.Group controlId="formInstructions">
-                                <Form.Label>Instructions</Form.Label>
-                                <Form.Control as="textarea" rows={3} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Enter instructions" />
-                            </Form.Group>
-                        </Form>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={handleCloseModal}>Close</Button>
-                        <Button variant="primary" onClick={selectedRecipeId ? updateRecipe : createRecipe}>
-                        {selectedRecipeId ? "Update Recipe" : "Create Recipe"}
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
-        </div>
-        </div>
-    )
 }
 
 export default Main;
