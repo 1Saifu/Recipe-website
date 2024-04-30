@@ -1,11 +1,14 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, } from "react";
 import Axios from "axios";
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Pagination from 'react-bootstrap/Pagination';
+import { imgDB } from '../firebase';
+import { v4 } from "uuid"
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
 import { useLocation, useNavigate } from "react-router-dom";
 import "../style.css";
 
@@ -15,6 +18,7 @@ const [recipes, setRecipes] = useState([]);
 const [title, setTitle] = useState("");
 const [ingredients, setIngredients] = useState([]);
 const [instructions, setInstructions] = useState("");
+const [imageUrl, setImageUrl] = useState("");
 const [reviewText, setReviewText] = useState("");
 const [showModal, setShowModal] = useState(false);
 const [selectedRecipeId, setSelectedRecipeId] = useState(null);
@@ -23,14 +27,23 @@ const [selectedRecipeReviews, setSelectedRecipeReviews] = useState([]);
 const navigate = useNavigate();
 const { state } = useLocation();
 const [currentPage, setCurrentPage] = useState(1);
-const [recipesPerPage] = useState(9);
+const [recipesPerPage] = useState(3);
+const [recipeImages, setRecipeImages] = useState({});
 
-const handleCloseModal = () => setShowModal(false);
+const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedRecipeId(null);
+    setTitle("");
+    setIngredients([]);
+    setInstructions("");
+    setImageUrl("");
+};
 const handleShowModal = () => setShowModal(true);
 
 useEffect(() => {
     fetchRecipe();
 }, [])
+
 
 const handleLogout = () => {
     localStorage.removeItem("accessToken");
@@ -67,23 +80,26 @@ const totalPages = Math.ceil(recipes.length / recipesPerPage);
 const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
 
-const createRecipe = async () => {
+const createRecipe = async (imageUrl) => {
     const creatorId = state?.userId;
     try {
         const token = localStorage.getItem("accessToken"); 
 
         const ingredientsString = ingredients.toString();
+        
 
         const response = await Axios.post("http://localhost:8080/recipe", {
             title,
             ingredients: ingredientsString,
             instructions,
-            creatorId
+            creatorId,
+            imageUrl: imageUrl || ""
         }, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
+
         console.log("Recipe created:", response.data);
         setRecipes(prevRecipes => [...prevRecipes, response.data]); 
         setTitle(""); 
@@ -95,32 +111,73 @@ const createRecipe = async () => {
     }
 };
 
-
-const updateRecipe = async () => {
-    try {
-        const response = await Axios.put(`http://localhost:8080/recipe/${selectedRecipeId}`, {
-            title,
-            ingredients,
-            instructions,
-        });
-        setRecipes(prevRecipes =>
-            prevRecipes.map(recipe =>
-                recipe._id === selectedRecipeId ? response.data : recipe
-            )
-        ); 
-        handleCloseModal(); 
-    } catch (error) {
-        console.error("Error updating recipe:", error);
-    }
-};
-
 const handleUpdateClick = (recipeId, recipeTitle, recipeIngredients, recipeInstructions) => {
     setSelectedRecipeId(recipeId);
     setTitle(recipeTitle);
     setIngredients(recipeIngredients);
     setInstructions(recipeInstructions);
-    handleShowModal();
+    setImageUrl(recipeImages[recipeId] || ""); 
+    handleShowModal(false);
 };
+
+
+const handleImageChange = async (event, recipeId) => {
+    console.log("Handling image change...");
+    const file = event.target.files[0];
+
+    const imageName = `${v4()}`;
+
+    const storageRef = ref(imgDB, `imgs$/${imageName}`);
+
+    try {
+
+        await uploadBytes(storageRef, file);
+
+        const imageUrl = await getDownloadURL(storageRef);
+        console.log("Download URL:", imageUrl); 
+
+        updateRecipe(recipeId, imageUrl);
+
+    } catch (error) {
+        console.error("Error uploading image:", error);
+    }
+};
+
+
+
+const updateRecipe = async (recipeId, imageUrl) => {
+    try {
+
+    const token = localStorage.getItem("accessToken");
+    const ingredientsString = ingredients.toString();
+
+    const response = await Axios.put(`http://localhost:8080/recipe/${selectedRecipeId}`, {
+        title,
+        ingredients: ingredientsString,
+        instructions,
+        imageUrl: imageUrl || ""
+    }, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+        
+    const updatedRecipe = response.data;
+        
+    setRecipes(prevRecipes =>
+    prevRecipes.map(recipe =>
+    recipe._id === recipeId ? updatedRecipe : recipe)); 
+                
+    console.log("Recipe after update:", response.data);
+
+    handleCloseModal();
+
+    } catch (error) {
+        console.error("Error updating recipe:", error);
+    }
+};
+
+
 
 const deleteRecipe = async (id) => {
     try{
@@ -193,7 +250,8 @@ return (
             {currentRecipes.map((recipe) => (
                 <Card key={recipe._id} style={{ width: '18rem', margin: '0 10px 20px 10px', boxShadow: '0px 8px 16px rgba(0, 0, 0, 2)' }}>
                     <Card.Body>
-                        <Card.Title style={{ fontFamily: 'Dancing Script', color:'#B8860B' }}>{recipe.title}</Card.Title>
+                        <Card.Title style={{ fontFamily: 'Dancing Script', color:'#B8860B' }}>{recipe.title}</Card.Title>   
+                        {recipe.imageUrl && <img src={recipe.imageUrl} alt="Uploaded" style={{ maxHeight: '200px', maxWidth: '200px', objectFit: 'cover' }} />}
                         <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px' }}> <strong>Ingredients:</strong> {recipe.ingredients.join(", ")} </Card.Text>
                         <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px' }}> <strong>Instructions:</strong> {recipe.instructions} </Card.Text>
                     </Card.Body>
@@ -273,6 +331,10 @@ return (
                         <Form.Group controlId="formTitle">
                             <Form.Label>Title</Form.Label>
                             <Form.Control type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter title" />
+                        </Form.Group>
+                        <Form.Group controlId="formImage">
+                            <Form.Label>Image</Form.Label>
+                            <Form.Control type="file" onChange={(event) => handleImageChange(event, selectedRecipeId)} />
                         </Form.Group>
                         <Form.Group controlId="formIngredients">
                             <Form.Label>Ingredients</Form.Label>

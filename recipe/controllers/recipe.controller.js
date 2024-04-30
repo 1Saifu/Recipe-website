@@ -14,10 +14,17 @@ async function getAllRecipes(req, res) {
 async function getRecipeById(req, res) {
     const { id } = req.params;
     try {
-        const recipe = await Recipe.findById(id);
+        const recipe = await Recipe.findById(id).populate('creator', 'username').lean();
+        
         if(!recipe) {
             res.status(404).json({ error: 'Recipe not found' })
         }
+
+        if (!recipe.imageUrl) {
+            return res.status(404).json({ error: 'Image not found for the recipe' });
+        }
+
+        res.json(recipe);
     } catch(error) {
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -35,7 +42,14 @@ async function createRecipe(req, res) {
     }
 
     try {
-        const recipe = await Recipe.create({ title, ingredients: ingredientsArray, instructions, creator: creatorId });
+
+        let imageUrl = null;
+        if (req.file) {
+            // If an image file is uploaded, set the image URL
+            imageUrl = req.file.path;
+        }
+
+        const recipe = await Recipe.create({ title, ingredients: ingredientsArray, instructions, creator: creatorId, imageUrl });
         console.log("Recipe created:", recipe);
         res.status(201).json(recipe);
     } catch(error) {
@@ -47,17 +61,31 @@ async function createRecipe(req, res) {
 
 async function updateRecipe(req, res) {
     const { id } = req.params;
-    const { title, ingredients, instructions } = req.body;
+    const { title, ingredients, instructions, imageUrl } = req.body; 
+
     try {
-        const updatedRecipe = await Recipe.findByIdAndUpdate(id, { title, ingredients, instructions }, { new: true });
-        if(!updatedRecipe) {
-            res.status(404).json({ error: 'Recipe not found' })
+        const updateFields = { title, ingredients, instructions };
+        if (imageUrl !== undefined) {
+            updateFields.imageUrl = imageUrl;
         }
+
+        // Update the recipe document in the database
+        const updatedRecipe = await Recipe.findByIdAndUpdate(id, updateFields, { new: true });
+        
+        if (!updatedRecipe) {
+            return res.status(404).json({ error: 'Recipe not found' });
+        }
+
+        console.log("Recipe updated in the database:", updatedRecipe);
+
+        // Send the updated recipe as response
         res.json(updatedRecipe);
-    } catch(error) {
+    } catch (error) {
+        console.error("Error updating recipe:", error);
         res.status(500).json({ error: 'Internal server error' });
     }
 }
+
 
 async function deleteRecipe(req, res) {
     const { id } = req.params;

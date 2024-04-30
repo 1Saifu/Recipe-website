@@ -9,7 +9,7 @@ const Home = () => {
 
 const [recipes, setRecipes] = useState([]);
 const [currentPage, setCurrentPage] = useState(1);
-const [recipesPerPage] = useState(9);
+const [recipesPerPage] = useState(3);
 
 useEffect(() => {
     fetchRecipes();
@@ -37,13 +37,11 @@ const fetchRecipes = async () => {
 
     return(
         <div>
-            <h2 style={{ fontSize: '60px', fontWeight: '200' }}>Recipe Website</h2>
+            <h2 style={{ fontSize: '60px', fontWeight: '200', }}>Recipe Website</h2>
             <br />
              <Link to="/pages/Login"> 
-             <button style={{ fontSize: '14px', padding: '6px 12px', width: '200px' }} className="button">Sign in</button> 
+             <button style={{ fontSize: '14px', padding: '6px 12px', width: '200px',  }} className="button">Sign in</button> 
              </Link>
-             <br />
-             <br />
             <Link to="/pages/Register">
             <button style={{ fontSize: '14px', padding: '6px 12px', width: '200px' }} className="button">Register</button>
             </Link>
@@ -60,6 +58,7 @@ const fetchRecipes = async () => {
                 </Card>
             ))}
         </div>
+        <br />
         <div className="d-flex justify-content-center">
                 <Pagination>
                     {currentPage > 1 && (
