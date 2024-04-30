@@ -246,32 +246,39 @@ return (
         <Button variant="primary" onClick={handleShowModal}>Create New Recipe</Button>
         <br />
         <br />
+
         <div className="d-flex justify-content-around flex-wrap">
-            {currentRecipes.map((recipe) => (
-                <Card key={recipe._id} style={{ width: '18rem', margin: '0 10px 20px 10px', boxShadow: '0px 8px 16px rgba(0, 0, 0, 2)' }}>
-                    <Card.Body>
-                        <Card.Title style={{ fontFamily: 'Dancing Script', color:'#B8860B' }}>{recipe.title}</Card.Title>   
-                        {recipe.imageUrl && <img src={recipe.imageUrl} alt="Uploaded" style={{ maxHeight: '200px', maxWidth: '200px', objectFit: 'cover' }} />}
-                        <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px' }}> <strong>Ingredients:</strong> {recipe.ingredients.join(", ")} </Card.Text>
-                        <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px' }}> <strong>Instructions:</strong> {recipe.instructions} </Card.Text>
-                    </Card.Body>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 15px 10px 15px' }}>
-                    {state?.userId === recipe.creator &&
-                        <>
-                        <Button className="customButton" onClick={() => handleUpdateClick(recipe._id, recipe.title, recipe.ingredients, recipe.instructions)}>Update</Button>
-                        <Button className="customButton" onClick={() => deleteRecipe(recipe._id)}>Delete</Button>
-                        </>
-                    }
+    {currentRecipes.map((recipe) => (
+        <Card key={recipe._id} style={{ width: '20rem', margin: '0 10px 20px 10px', boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)' }}>
+            <div style={{ height: '200px', position: 'relative' }}>
+                <img src={recipe.imageUrl} alt="Uploaded" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '5px 5px 0 0' }} />
+            </div>
+            <div style={{ padding: '10px' }}>
+                <div>
+                    <Card.Title style={{ fontFamily: 'Dancing Script', marginBottom: '15px', fontSize: '20px' }}>{recipe.title}</Card.Title>
+                </div>
+                <div>
+                    <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px', marginBottom: '5px' }}> <strong>Ingredients:</strong> {recipe.ingredients.join(", ")} </Card.Text>
+                </div>
+                <div>
+                    <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px', marginBottom: '5px' }}> <strong>Instructions:</strong> {recipe.instructions} </Card.Text>
+                </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px 10px 10px' }}>
+                {state?.userId === recipe.creator && (
+                    <div style={{ display: 'flex', flexDirection: 'row', marginBottom: '10px' }}>
+                        <Button className="text-link" style={{ marginRight: '10px' }} onClick={() => handleUpdateClick(recipe._id, recipe.title, recipe.ingredients, recipe.instructions)}>Update</Button>
+                        <Button className="text-link" onClick={() => deleteRecipe(recipe._id)}>Delete</Button>
                     </div>
-                    
-                    {state?.userId && (
-                            <div style={{ padding: '0 15px 10px 15px' }}>
-                                <Button variant="primary" className="customButton" onClick={() => handleShowReviewModal(recipe._id)}>Review</Button>
-                            </div>
-                        )}
-                    </Card>
-                ))}
-        </div>
+                )}
+                <div>
+                    <Button variant="primary" className="customButton" onClick={() => handleShowReviewModal(recipe._id)}>Review</Button>
+                </div>
+            </div>
+        </Card>
+    ))}
+</div>
+
 
         <Pagination className="d-flex justify-content-center">
     {currentPage > 1 && (
