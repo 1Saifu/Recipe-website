@@ -28,7 +28,7 @@ const navigate = useNavigate();
 const { state } = useLocation();
 const [currentPage, setCurrentPage] = useState(1);
 const [recipesPerPage] = useState(3);
-const [recipeImages, setRecipeImages] = useState({});
+
 
 const handleCloseModal = () => {
     setShowModal(false);
@@ -79,6 +79,33 @@ const totalPages = Math.ceil(recipes.length / recipesPerPage);
 
 const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+//Function om image
+const handleImageChange = async (event) => {
+    const file = event.target.files[0];
+    console.log("Selected file:", file);
+
+    if (!file) {
+        console.error("No file selected.");
+        return;
+    }
+
+    const imageName = `${v4()}`;
+    const storageRef = ref(imgDB, `imgs$/${imageName}`);
+
+    try {
+        await uploadBytes(storageRef, file);
+        const imageUrl = await getDownloadURL(storageRef);
+        console.log("Download URL:", imageUrl);
+
+        setImageUrl(imageUrl)
+
+        updateRecipe(selectedRecipeId, imageUrl);
+        
+    } catch (error) {
+        console.error("Error uploading image:", error);
+    }
+};
+
 
 const createRecipe = async (imageUrl) => {
     const creatorId = state?.userId;
@@ -86,7 +113,6 @@ const createRecipe = async (imageUrl) => {
         const token = localStorage.getItem("accessToken"); 
 
         const ingredientsString = ingredients.toString();
-        
 
         const response = await Axios.post("http://localhost:8080/recipe", {
             title,
@@ -100,52 +126,21 @@ const createRecipe = async (imageUrl) => {
             }
         });
 
-        console.log("Recipe created:", response.data);
+        console.log("Creating data:", response.data);
+        console.log("ImageUrl from response:", response.data.imageUrl);
+
         setRecipes(prevRecipes => [...prevRecipes, response.data]); 
         setTitle(""); 
         setIngredients([]);
         setInstructions("");
+        setImageUrl(""); 
         setShowModal(false);
     } catch (error) {
         console.error("Error creating recipes:", error);
     }
 };
 
-const handleUpdateClick = (recipeId, recipeTitle, recipeIngredients, recipeInstructions) => {
-    setSelectedRecipeId(recipeId);
-    setTitle(recipeTitle);
-    setIngredients(recipeIngredients);
-    setInstructions(recipeInstructions);
-    setImageUrl(recipeImages[recipeId] || ""); 
-    handleShowModal(false);
-};
-
-
-const handleImageChange = async (event, recipeId) => {
-    console.log("Handling image change...");
-    const file = event.target.files[0];
-
-    const imageName = `${v4()}`;
-
-    const storageRef = ref(imgDB, `imgs$/${imageName}`);
-
-    try {
-
-        await uploadBytes(storageRef, file);
-
-        const imageUrl = await getDownloadURL(storageRef);
-        console.log("Download URL:", imageUrl); 
-
-        updateRecipe(recipeId, imageUrl);
-
-    } catch (error) {
-        console.error("Error uploading image:", error);
-    }
-};
-
-
-
-const updateRecipe = async (recipeId, imageUrl) => {
+const updateRecipe = async (selectedRecipeId, imageUrl) => {
     try {
 
     const token = localStorage.getItem("accessToken");
@@ -166,7 +161,7 @@ const updateRecipe = async (recipeId, imageUrl) => {
         
     setRecipes(prevRecipes =>
     prevRecipes.map(recipe =>
-    recipe._id === recipeId ? updatedRecipe : recipe)); 
+    recipe._id === selectedRecipeId ? updatedRecipe : recipe)); 
                 
     console.log("Recipe after update:", response.data);
 
@@ -177,6 +172,15 @@ const updateRecipe = async (recipeId, imageUrl) => {
     }
 };
 
+//När man trycker på update knappen
+const handleUpdateClick = (recipe) => {
+    setSelectedRecipeId(recipe._id);
+    setTitle(recipe.title);
+    setIngredients(recipe.ingredients);
+    setInstructions(recipe.instructions);
+    setImageUrl(recipe.imageUrl); 
+    handleShowModal();
+};
 
 
 const deleteRecipe = async (id) => {
@@ -236,7 +240,6 @@ const handleReviewSubmit = async (recipeId) => {
     }
 };
 
-
 return (
     <div>
         <h2 style={{ fontSize: '60px', fontWeight: '200' }}>Recipes</h2>
@@ -267,7 +270,7 @@ return (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px 10px 10px' }}>
                 {state?.userId === recipe.creator && (
                     <div style={{ display: 'flex', flexDirection: 'row', marginBottom: '10px' }}>
-                        <Button className="text-link" style={{ marginRight: '10px' }} onClick={() => handleUpdateClick(recipe._id, recipe.title, recipe.ingredients, recipe.instructions)}>Update</Button>
+                        <Button className="text-link" style={{ marginRight: '10px' }} onClick={() => handleUpdateClick(recipe)}>Update</Button>
                         <Button className="text-link" onClick={() => deleteRecipe(recipe._id)}>Delete</Button>
                     </div>
                 )}
@@ -354,10 +357,16 @@ return (
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseModal}>Close</Button>
-                    <Button variant="primary" onClick={selectedRecipeId ? updateRecipe : createRecipe}>
-                    {selectedRecipeId ? "Update Recipe" : "Create Recipe"}
-                    </Button>
+                {!selectedRecipeId && (
+                <Button variant="primary" onClick={() => createRecipe(imageUrl)}>
+                Create Recipe
+                </Button>
+                )}
+                {selectedRecipeId && (
+                <Button variant="primary" onClick={() => updateRecipe(selectedRecipeId, imageUrl)}>
+                Update Recipe
+                </Button>
+                )}
                 </Modal.Footer>
             </Modal>
         </div>
