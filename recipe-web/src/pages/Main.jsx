@@ -6,6 +6,7 @@ import Card from 'react-bootstrap/Card';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Pagination from 'react-bootstrap/Pagination';
+import ToggleButton from 'react-bootstrap/ToggleButton';
 import { imgDB } from '../firebase';
 import { v4 } from "uuid"
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
@@ -24,10 +25,11 @@ const [showModal, setShowModal] = useState(false);
 const [selectedRecipeId, setSelectedRecipeId] = useState(null);
 const [showReviewModal, setShowReviewModal] = useState(false);
 const [selectedRecipeReviews, setSelectedRecipeReviews] = useState([]);
+const [likes, setLikes] = useState({});
 const navigate = useNavigate();
 const { state } = useLocation();
 const [currentPage, setCurrentPage] = useState(1);
-const [recipesPerPage] = useState(3);
+const [recipesPerPage] = useState(6);
 
 
 const handleCloseModal = () => {
@@ -65,6 +67,13 @@ const fetchRecipe = async () => {
     try{
         const response = await Axios.get("http://localhost:8080/recipe")
         setRecipes(response.data)
+        
+        const likesInfo = {};
+        response.data.forEach(recipe => {
+            likesInfo[recipe._id] = recipe.favorites.length;
+        });
+
+        setLikes(likesInfo);
     }
     catch(error){
         console.error("Error fetching recipes:", error);
@@ -198,6 +207,7 @@ const fetchRecipeReviews = async (recipeId) => {
         const response = await Axios.get(`http://localhost:8080/recipe/${recipeId}/reviews`);
 
         setSelectedRecipeReviews(response.data);
+        console.log(response.data)
 
         setShowReviewModal(true);
     } catch (error) {
@@ -240,6 +250,57 @@ const handleReviewSubmit = async (recipeId) => {
     }
 };
 
+
+const handleLikeClick = async (recipeId) => {
+    if (state?.userId === recipes.find(recipe => recipe._id === recipeId)?.creator) {
+        console.log("Owner cannot like their own recipe.");
+        return; 
+    }
+
+    try {
+        const token = localStorage.getItem("accessToken");
+
+        const response = await Axios.post(`http://localhost:8080/recipe/${recipeId}/favorite`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        console.log("Response data:", response.data);
+
+        setLikes(prevLikes => ({
+            ...prevLikes,
+            [recipeId]: (prevLikes[recipeId] || 0) + 1
+        }));
+
+    } catch (error) {
+        console.error("Error liking recipe:", error);
+    }
+};
+
+
+const handleUnlikeClick = async (recipeId) => {
+    try {
+        const token = localStorage.getItem("accessToken");
+        const response = await Axios.delete(`http://localhost:8080/recipe/${recipeId}/unfavorite`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        console.log("Response data:", response.data);
+
+        setLikes(prevLikes => ({
+            ...prevLikes,
+            [recipeId]: Math.max((prevLikes[recipeId] || 0) - 1, 0)
+        }));
+
+    } catch (error) {
+        console.error("Error unliking recipe:", error);
+    }
+};
+
+
+
+
 return (
     <div>
         <h2 style={{ fontSize: '60px', fontWeight: '200' }}>Recipes</h2>
@@ -251,51 +312,70 @@ return (
         <br />
 
         <div className="d-flex justify-content-around flex-wrap">
-    {currentRecipes.map((recipe) => (
-        <Card key={recipe._id} style={{ width: '20rem', margin: '0 10px 20px 10px', boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)' }}>
-            <div style={{ height: '200px', position: 'relative' }}>
-                <img src={recipe.imageUrl} alt="Uploaded" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '5px 5px 0 0' }} />
-            </div>
-            <div style={{ padding: '10px' }}>
-                <div>
-                    <Card.Title style={{ fontFamily: 'Dancing Script', marginBottom: '15px', fontSize: '20px' }}>{recipe.title}</Card.Title>
-                </div>
-                <div>
-                    <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px', marginBottom: '5px' }}> <strong>Ingredients:</strong> {recipe.ingredients.join(", ")} </Card.Text>
-                </div>
-                <div>
-                    <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px', marginBottom: '5px' }}> <strong>Instructions:</strong> {recipe.instructions} </Card.Text>
-                </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px 10px 10px' }}>
-                {state?.userId === recipe.creator && (
-                    <div style={{ display: 'flex', flexDirection: 'row', marginBottom: '10px' }}>
-                        <Button className="text-link" style={{ marginRight: '10px' }} onClick={() => handleUpdateClick(recipe)}>Update</Button>
-                        <Button className="text-link" onClick={() => deleteRecipe(recipe._id)}>Delete</Button>
+            {currentRecipes.map((recipe) => (
+                <Card key={recipe._id} style={{ width: '20rem', margin: '0 10px 20px 10px', boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)' }}>
+                    <div style={{ height: '200px', position: 'relative' }}>
+                        <img src={recipe.imageUrl} alt="Uploaded" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '5px 5px 0 0' }} />
                     </div>
-                )}
-                <div>
-                    <Button variant="primary" className="customButton" onClick={() => handleShowReviewModal(recipe._id)}>Review</Button>
-                </div>
-            </div>
-        </Card>
-    ))}
-</div>
-
+                    <div style={{ padding: '10px' }}>
+                        <div>
+                            <Card.Title style={{ fontFamily: 'Dancing Script', marginBottom: '15px', fontSize: '20px' }}>{recipe.title}</Card.Title>
+                        </div>
+                        <div>
+                            <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px', marginBottom: '5px' }}> <strong>Ingredients:</strong> {recipe.ingredients.join(", ")} </Card.Text>
+                        </div>
+                        <div>
+                            <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px', marginBottom: '5px' }}> <strong>Instructions:</strong> {recipe.instructions} </Card.Text>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px 10px 10px' }}>
+                        {state?.userId === recipe.creator && (
+                            <div style={{ display: 'flex', flexDirection: 'row', marginBottom: '10px' }}>
+                                <Button className="text-link" style={{ marginRight: '10px' }} onClick={() => handleUpdateClick(recipe)}>Update</Button>
+                                <Button className="text-link" onClick={() => deleteRecipe(recipe._id)}>Delete</Button>
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px 10px 10px' }}>
+                            <Button variant="primary" className="customButton" onClick={() => handleShowReviewModal(recipe._id)}>Review</Button>
+                        {state?.userId !== recipe.creator && ( 
+                            <div style={{ marginLeft: '10px' }}>
+                                <ToggleButton
+                                    id={`toggle-like-${recipe._id}`}
+                                    type="checkbox"
+                                    className="like-button" 
+                                    variant={likes[recipe._id] ? "primary" : "outline-primary"}
+                                    checked={likes && likes[recipe._id]} 
+                                    onChange={() => {
+                                        if (likes[recipe._id]) {
+                                            handleUnlikeClick(recipe._id);
+                                        } else {
+                                            handleLikeClick(recipe._id);
+                                        }
+                                    }}
+                                >
+                                    {likes[recipe._id] ? `Unlike ${likes[recipe._id]}` : `Like ${likes[recipe._id]}`}
+                                </ToggleButton>
+                            </div>
+                        )}
+                        </div>
+                    </div>
+                </Card> 
+            ))}
+        </div>
 
         <Pagination className="d-flex justify-content-center">
-    {currentPage > 1 && (
-        <Pagination.Prev onClick={() => paginate(currentPage - 1)} />
-    )}
-    {Array.from({ length: totalPages }, (_, index) => (
-        <Pagination.Item key={index + 1} active={index + 1 === currentPage} onClick={() => paginate(index + 1)}>
-            {index + 1}
-        </Pagination.Item>
-    ))}
-    {currentPage < totalPages && (
-        <Pagination.Next onClick={() => paginate(currentPage + 1)} />
-    )}
-</Pagination>
+            {currentPage > 1 && (
+                <Pagination.Prev onClick={() => paginate(currentPage - 1)} />
+            )}
+            {Array.from({ length: totalPages }, (_, index) => (
+                <Pagination.Item key={index + 1} active={index + 1 === currentPage} onClick={() => paginate(index + 1)}>
+                    {index + 1}
+                </Pagination.Item>
+            ))}
+            {currentPage < totalPages && (
+                <Pagination.Next onClick={() => paginate(currentPage + 1)} />
+            )}
+        </Pagination>
 
 
         <Modal show={showReviewModal} onHide={handleCloseReviewModal}>
@@ -357,22 +437,21 @@ return (
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                {!selectedRecipeId && (
-                <Button variant="primary" onClick={() => createRecipe(imageUrl)}>
-                Create Recipe
-                </Button>
-                )}
-                {selectedRecipeId && (
-                <Button variant="primary" onClick={() => updateRecipe(selectedRecipeId, imageUrl)}>
-                Update Recipe
-                </Button>
-                )}
+                    {!selectedRecipeId && (
+                        <Button variant="primary" onClick={() => createRecipe(imageUrl)}>
+                            Create Recipe
+                        </Button>
+                    )}
+                    {selectedRecipeId && (
+                        <Button variant="primary" onClick={() => updateRecipe(selectedRecipeId, imageUrl)}>
+                            Update Recipe
+                        </Button>
+                    )}
                 </Modal.Footer>
             </Modal>
         </div>
     </div>
 );
-
 }
 
 export default Main;

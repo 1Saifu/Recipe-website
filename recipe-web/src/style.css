@@ -66,3 +66,13 @@
   background:rgb(48, 48, 48);
   color: rgb(228, 228, 228);
 }
+
+.like-button {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.like-button:hover {
+  background-color: #007bff !important; 
+  border-color: #007bff !important; 
+  color: #fff !important; 
+}

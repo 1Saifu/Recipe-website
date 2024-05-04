@@ -123,6 +123,32 @@ async function favoriteRecipe(req, res) {
     }
 }
 
+async function unfavoriteRecipe(req, res) {
+    const { id } = req.params;
+    const userId = req.userId;
+
+    try {
+        const recipe = await Recipe.findById(id);
+        if (!recipe) {
+            return res.status(404).json({ error: 'Recipe not found' });
+        }
+
+        const index = recipe.favorites.indexOf(userId);
+        if (index === -1) {
+            return res.status(400).json({ error: 'Recipe is not favorited by the user' });
+        }
+
+        recipe.favorites.splice(index, 1);
+        await recipe.save();
+
+        res.json({ message: 'Recipe unfavorited successfully' });
+    } catch (error) {
+        console.error('Error unfavoriting recipe:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
 async function createReview(req, res) {
     const { id } = req.params;
     const { text } = req.body;
@@ -185,6 +211,7 @@ module.exports = {
     updateRecipe,
     deleteRecipe,
     favoriteRecipe,
+    unfavoriteRecipe,
     createReview,
     getRecipeReviews
 };
