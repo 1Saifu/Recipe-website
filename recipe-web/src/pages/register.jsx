@@ -26,7 +26,7 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await Axios.post('http://localhost:8080/creator/register', { username, email, password });
+            const response = await Axios.post(`${process.env.REACT_APP_BACKEND_URL}/creator/register`, { username, email, password });
             const { token, user } = response.data;
             const userId = user._id;
 

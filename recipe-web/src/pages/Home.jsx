@@ -18,7 +18,7 @@ useEffect(() => {
 
 const fetchRecipes = async () => {
     try{
-        const response = await Axios.get("http://localhost:8080/recipe")
+        const response = await Axios.get(`${process.env.REACT_APP_BACKEND_URL}/recipe`)
         setRecipes(response.data)
     }
     catch(error){

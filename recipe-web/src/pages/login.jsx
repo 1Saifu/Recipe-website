@@ -21,7 +21,7 @@ const handlePassword = (e) => {
 const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        const response = await Axios.post("http://localhost:8080/creator/login", { email, password });
+        const response = await Axios.post(`${process.env.REACT_APP_BACKEND_URL}/creator/login`, { email, password });
         const { token, user } = response.data;
         const userId = user._id;
 
