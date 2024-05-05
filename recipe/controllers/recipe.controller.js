@@ -4,7 +4,7 @@ const User = require('../models/user');
 
 async function getAllRecipes(req, res) {
     try {
-        const recipes = await Recipe.find();
+        const recipes = await Recipe.find().populate('creator', 'username');
         res.json(recipes);
     } catch(error) {
         res.status(500).json({ error: 'Internal server error' });
@@ -43,7 +43,11 @@ async function createRecipe(req, res) {
 
     try {
 
-        const recipe = await Recipe.create({ title, ingredients: ingredientsArray, instructions, creator: creatorId, imageUrl });
+        const recipe = await Recipe.create({ title, 
+            ingredients: ingredientsArray, 
+            instructions, 
+            creator: creatorId, 
+            imageUrl });
         console.log("Recipe created:", recipe);
         
         res.status(201).json(recipe);

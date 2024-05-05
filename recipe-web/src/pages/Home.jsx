@@ -64,6 +64,9 @@ const fetchRecipes = async () => {
                                 <div>
                                     <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px', marginBottom: '5px' }}> <strong>Instructions:</strong> {recipe.instructions} </Card.Text>
                                 </div>
+                                <div>
+                                    <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px', marginBottom: '5px' }}> <strong>Created by:</strong> {recipe.creator.username} </Card.Text>
+                                </div>
                             </div>
                         </Card.Body>
                     </Card>

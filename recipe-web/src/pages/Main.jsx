@@ -26,6 +26,8 @@ const [selectedRecipeId, setSelectedRecipeId] = useState(null);
 const [showReviewModal, setShowReviewModal] = useState(false);
 const [selectedRecipeReviews, setSelectedRecipeReviews] = useState([]);
 const [likes, setLikes] = useState({});
+const [showDeleteModal, setShowDeleteModal] = useState(false);
+const [recipeToDelete, setRecipeToDelete] = useState(null);
 const navigate = useNavigate();
 const { state } = useLocation();
 const [currentPage, setCurrentPage] = useState(1);
@@ -41,6 +43,16 @@ const handleCloseModal = () => {
     setImageUrl("");
 };
 const handleShowModal = () => setShowModal(true);
+
+const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setRecipeToDelete(null);
+};
+
+const handleShowDeleteModal = (recipeId) => {
+    setRecipeToDelete(recipeId);
+    setShowDeleteModal(true);
+};
 
 useEffect(() => {
     fetchRecipe();
@@ -63,22 +75,30 @@ useEffect(() => {
     }
 }, [state]);
 
-const fetchRecipe = async () => {
-    try{
-        const response = await Axios.get("http://localhost:8080/recipe")
-        setRecipes(response.data)
-        
-        const likesInfo = {};
-        response.data.forEach(recipe => {
-            likesInfo[recipe._id] = recipe.favorites.length;
-        });
 
-        setLikes(likesInfo);
+    const fetchRecipe = async () => {
+        try {
+            const token = localStorage.getItem("accessToken");
+    
+            const response = await Axios.get("http://localhost:8080/recipe", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+    
+            setRecipes(response.data);
+    
+            const likesInfo = {};
+            response.data.forEach(recipe => {
+                likesInfo[recipe._id] = recipe.favorites.length;
+            });
+    
+            setLikes(likesInfo);
+        } catch (error) {
+            console.error("Error fetching recipes:", error);
+        }
     }
-    catch(error){
-        console.error("Error fetching recipes:", error);
-    }
-}
+    
 
 const lastRecipeIndex = currentPage * recipesPerPage;
 const firstRecipeIndex = lastRecipeIndex - recipesPerPage;
@@ -139,6 +159,7 @@ const createRecipe = async (imageUrl) => {
         console.log("ImageUrl from response:", response.data.imageUrl);
 
         setRecipes(prevRecipes => [...prevRecipes, response.data]); 
+        fetchRecipe();
         setTitle(""); 
         setIngredients([]);
         setInstructions("");
@@ -193,14 +214,19 @@ const handleUpdateClick = (recipe) => {
 
 
 const deleteRecipe = async (id) => {
-    try{
-        await Axios.delete(`http://localhost:8080/recipe/${id}`);
+    try {
+        const token = localStorage.getItem("accessToken");
+        const response = await Axios.delete(`http://localhost:8080/recipe/${id}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         setRecipes(prevRecipes => prevRecipes.filter(recipe => recipe._id !== id));
+    } catch (error) {
+        console.error("Error deleting recipe:", error);
     }
-    catch(error){
-        console.error("Error deleting recipes:", error);
-    }
-}
+};
+
 
 const fetchRecipeReviews = async (recipeId) => {
     try {
@@ -250,7 +276,6 @@ const handleReviewSubmit = async (recipeId) => {
     }
 };
 
-
 const handleLikeClick = async (recipeId) => {
     if (state?.userId === recipes.find(recipe => recipe._id === recipeId)?.creator) {
         console.log("Owner cannot like their own recipe.");
@@ -298,9 +323,6 @@ const handleUnlikeClick = async (recipeId) => {
     }
 };
 
-
-
-
 return (
     <div>
         <h2 style={{ fontSize: '60px', fontWeight: '200' }}>Recipes</h2>
@@ -327,17 +349,20 @@ return (
                         <div>
                             <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px', marginBottom: '5px' }}> <strong>Instructions:</strong> {recipe.instructions} </Card.Text>
                         </div>
+                        <div>
+                            <Card.Text style={{ fontFamily: 'Dancing Script', fontSize: '16px', marginBottom: '5px' }}> <strong>Created by:</strong> {recipe.creator.username} </Card.Text>
+                        </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px 10px 10px' }}>
-                        {state?.userId === recipe.creator && (
+                            {state && state.userId === recipe.creator._id && (
                             <div style={{ display: 'flex', flexDirection: 'row', marginBottom: '10px' }}>
                                 <Button className="text-link" style={{ marginRight: '10px' }} onClick={() => handleUpdateClick(recipe)}>Update</Button>
-                                <Button className="text-link" onClick={() => deleteRecipe(recipe._id)}>Delete</Button>
+                                <Button className="text-link" onClick={() => handleShowDeleteModal(recipe._id)}>Delete</Button>
                             </div>
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px 10px 10px' }}>
                             <Button variant="primary" className="customButton" onClick={() => handleShowReviewModal(recipe._id)}>Review</Button>
-                        {state?.userId !== recipe.creator && ( 
+                        {state?.userId !== recipe.creator._id && ( 
                             <div style={{ marginLeft: '10px' }}>
                                 <ToggleButton
                                     id={`toggle-like-${recipe._id}`}
@@ -447,6 +472,26 @@ return (
                             Update Recipe
                         </Button>
                     )}
+                </Modal.Footer>
+            </Modal>
+
+            <Modal show={showDeleteModal} onHide={handleCloseDeleteModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Delete Recipe</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete this recipe?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseDeleteModal}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={() => {
+                        deleteRecipe(recipeToDelete);
+                        handleCloseDeleteModal();
+                    }}>
+                        Delete
+                    </Button>
                 </Modal.Footer>
             </Modal>
         </div>
