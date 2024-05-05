@@ -7,17 +7,24 @@ const {
     updateRecipe,
     deleteRecipe,
     favoriteRecipe,
-    createReview
+    unfavoriteRecipe,
+    createReview,
+    getRecipeReviews
 } = require('../controllers/recipe.controller');
+const authMiddleware = require('../middleware/creator.middleware');
 
 const recipeRouter = Express.Router();
 
 recipeRouter.get('/', getAllRecipes);
-recipeRouter.get('/:id', getRecipeById);
-recipeRouter.post('/', createRecipe);
-recipeRouter.put('/:id', updateRecipe);
-recipeRouter.delete('/:id', deleteRecipe);
-recipeRouter.post('/:id/favorite', favoriteRecipe);
-recipeRouter.post('/:id/reviews', createReview);
+recipeRouter.get('/', authMiddleware, getAllRecipes);
+recipeRouter.get('/:id', authMiddleware, getRecipeById);
+recipeRouter.post('/', authMiddleware, createRecipe);
+recipeRouter.put('/:id', authMiddleware, updateRecipe);
+recipeRouter.delete('/:id', authMiddleware, deleteRecipe);
+recipeRouter.post('/:id/favorite', authMiddleware, favoriteRecipe);
+recipeRouter.delete('/:id/unfavorite', authMiddleware, unfavoriteRecipe);
+recipeRouter.delete('/:id', authMiddleware, deleteRecipe);
+recipeRouter.post('/:id/reviews', authMiddleware, createReview);
+recipeRouter.get('/:id/reviews', authMiddleware, getRecipeReviews);
 
 module.exports = recipeRouter;
