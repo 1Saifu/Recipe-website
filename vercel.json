@@ -1,0 +1,12 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "mongoose_server/server.js",
+            "use": "@vercel/node"
+        }
+    ],
+    "routes": [
+        { "src": "/(.*)", "dest": "/mongoose_server/server.js" }
+    ]
+}
