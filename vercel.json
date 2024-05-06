@@ -2,11 +2,11 @@
     "version": 2,
     "builds": [
         {
-            "src": "recipe/index.js",
+            "src": "mongoose_server/server.js",
             "use": "@vercel/node"
         }
     ],
     "routes": [
-        { "src": "/(.*)", "dest": "/recipe/index.js" }
+        { "src": "/(.*)", "dest": "/mongoose_server/server.js" }
     ]
 }
