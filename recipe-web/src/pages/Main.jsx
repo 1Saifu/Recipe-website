@@ -80,7 +80,7 @@ useEffect(() => {
         try {
             const token = localStorage.getItem("accessToken");
     
-            const response = await Axios.get(`${process.env.REACT_APP_BACKEND_URL}/recipe`, {
+            const response = await Axios.get("http://localhost:8080/recipe", {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -143,7 +143,7 @@ const createRecipe = async (imageUrl) => {
 
         const ingredientsString = ingredients.toString();
 
-        const response = await Axios.post(`${process.env.REACT_APP_BACKEND_URL}/recipe`, {
+        const response = await Axios.post("http://localhost:8080/recipe", {
             title,
             ingredients: ingredientsString,
             instructions,
@@ -176,7 +176,7 @@ const updateRecipe = async (selectedRecipeId, imageUrl) => {
     const token = localStorage.getItem("accessToken");
     const ingredientsString = ingredients.toString();
 
-    const response = await Axios.put(`${process.env.REACT_APP_BACKEND_URL}/recipe/${selectedRecipeId}`, {
+    const response = await Axios.put(`http://localhost:8080/recipe/${selectedRecipeId}`, {
         title,
         ingredients: ingredientsString,
         instructions,
@@ -216,7 +216,7 @@ const handleUpdateClick = (recipe) => {
 const deleteRecipe = async (id) => {
     try {
         const token = localStorage.getItem("accessToken");
-        const response = await Axios.delete(`${process.env.REACT_APP_BACKEND_URL}/recipe/${id}`, {
+        const response = await Axios.delete(`http://localhost:8080/recipe/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -230,7 +230,7 @@ const deleteRecipe = async (id) => {
 
 const fetchRecipeReviews = async (recipeId) => {
     try {
-        const response = await Axios.get(`${process.env.REACT_APP_BACKEND_URL}/recipe/${recipeId}/reviews`);
+        const response = await Axios.get(`http://localhost:8080/recipe/${recipeId}/reviews`);
 
         setSelectedRecipeReviews(response.data);
         console.log(response.data)
@@ -259,7 +259,7 @@ const handleReviewSubmit = async (recipeId) => {
 
         const token = localStorage.getItem("accessToken");
 
-        const response = await Axios.post(`${process.env.REACT_APP_BACKEND_URL}/recipe/${recipeId}/reviews`, {
+        const response = await Axios.post(`http://localhost:8080/recipe/${recipeId}/reviews`, {
             text: reviewText
         }, {
             headers: {
@@ -285,7 +285,7 @@ const handleLikeClick = async (recipeId) => {
     try {
         const token = localStorage.getItem("accessToken");
 
-        const response = await Axios.post(`${process.env.REACT_APP_BACKEND_URL}/recipe/${recipeId}/favorite`, {}, {
+        const response = await Axios.post(`http://localhost:8080/recipe/${recipeId}/favorite`, {}, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -306,7 +306,7 @@ const handleLikeClick = async (recipeId) => {
 const handleUnlikeClick = async (recipeId) => {
     try {
         const token = localStorage.getItem("accessToken");
-        const response = await Axios.delete(`${process.env.REACT_APP_BACKEND_URL}/recipe/${recipeId}/unfavorite`, {
+        const response = await Axios.delete(`http://localhost:8080/recipe/${recipeId}/unfavorite`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
