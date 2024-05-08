@@ -46,10 +46,10 @@ const Register = () => {
 
     return(
         <div>
-            <h2>Register</h2>
+            <h2 style={{ fontSize: '60px', fontWeight: '200' }}>Register</h2>
             <div className="form-container">
                 <form onSubmit={handleSubmit}>
-                <h6>Enter name</h6>
+                <h6 style={{ fontWeight: '200' }}>Enter name</h6>
             <input className="myInput"
                 type="text"
                 value={username}
@@ -57,7 +57,7 @@ const Register = () => {
                 required
             />
             <br />
-            <h6>Enter email</h6>
+            <h6 style={{ fontWeight: '200' }}>Enter email</h6>
             <input className="myInput"
                 type="email"
                 value={email}
@@ -65,7 +65,7 @@ const Register = () => {
                 required
             />
             <br />
-            <h6>Enter Password</h6>
+            <h6 style={{ fontWeight: '200' }}>Enter Password</h6>
             <input className="myInput"
                 type="password"
                 value={password}
@@ -74,7 +74,7 @@ const Register = () => {
             />
             <br />
             <br />
-            <button type="submit" className="log-button">Register</button>
+            <button type="submit" style={{ width: "250px" }} className="button">Register</button>
                 </form>
             </div>
         </div>
