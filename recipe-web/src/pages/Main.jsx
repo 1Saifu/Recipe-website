@@ -380,7 +380,7 @@ return (
                                         }
                                     }}
                                 >
-                                    {likes[recipe._id] ? `Unlike ${likes[recipe._id]}` : `Like ${likes[recipe._id]}`}
+                                    {likes[recipe._id] ? `❤️️ ${likes[recipe._id]}` : `♡ ${likes[recipe._id]}`}
                                 </ToggleButton>
                             </div>
                         )}
