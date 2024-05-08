@@ -197,6 +197,8 @@ const updateRecipe = async (selectedRecipeId, imageUrl) => {
 
     handleCloseModal();
 
+    window.location.reload();
+
     } catch (error) {
         console.error("Error updating recipe:", error);
     }

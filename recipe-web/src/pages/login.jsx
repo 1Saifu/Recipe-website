@@ -42,11 +42,11 @@ const handleSubmit = async (e) => {
 
     return(
         <div>
-            <h2>Sign in</h2>
+            <h2 style={{ fontSize: '60px', fontWeight: '200' }}>Sign in</h2>
             <form onSubmit={handleSubmit}>
             <div className="form-container">
                 <div>
-            <h6>Enter email</h6>
+            <h6 style={{ fontWeight: '200' }}>Enter email</h6>
             <input className="myInput"
                 type="email"
                 value={email}
@@ -54,7 +54,7 @@ const handleSubmit = async (e) => {
                 required
             />
             <br />
-            <h6>Enter Password</h6>
+            <h6 style={{ fontWeight: '200' }}>Enter Password</h6>
             <input className="myInput"
                 type="password"
                 value={password}
@@ -63,7 +63,7 @@ const handleSubmit = async (e) => {
             />
             <br />
             <br />
-            <button type="submit" className="log-button">Log in</button>
+            <button type="submit" style={{ width: "250px" }} className="button">Log in</button>
                 </div>
             </div>
             </form>
