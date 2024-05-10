@@ -86,14 +86,21 @@ useEffect(() => {
                 }
             });
     
-            setRecipes(response.data);
+            const recipesData = response.data.map(recipe => ({
+                ...recipe,
+                likeCount: recipe.favorites ? recipe.favorites.length : 0,
+                liked: recipe.favorites && recipe.favorites.includes(state?.userId)
+            }));
     
-            const likesInfo = {};
-            response.data.forEach(recipe => {
-                likesInfo[recipe._id] = recipe.favorites.length;
+            setRecipes(recipesData);
+    
+            // Reset likes state when fetching recipes for a new user
+            const likesData = {};
+            recipesData.forEach(recipe => {
+                likesData[recipe._id] = recipe.liked ? 1 : 0;
             });
-    
-            setLikes(likesInfo);
+            setLikes(likesData);
+
         } catch (error) {
             console.error("Error fetching recipes:", error);
         }
@@ -279,14 +286,8 @@ const handleReviewSubmit = async (recipeId) => {
 };
 
 const handleLikeClick = async (recipeId) => {
-    if (state?.userId === recipes.find(recipe => recipe._id === recipeId)?.creator) {
-        console.log("Owner cannot like their own recipe.");
-        return; 
-    }
-
     try {
         const token = localStorage.getItem("accessToken");
-
         const response = await Axios.post(`http://localhost:8080/recipe/${recipeId}/favorite`, {}, {
             headers: {
                 Authorization: `Bearer ${token}`
@@ -294,10 +295,19 @@ const handleLikeClick = async (recipeId) => {
         });
         console.log("Response data:", response.data);
 
+            // Update the likes state
         setLikes(prevLikes => ({
             ...prevLikes,
             [recipeId]: (prevLikes[recipeId] || 0) + 1
         }));
+
+        // Update the likeCount property of the corresponding recipe
+        setRecipes(prevRecipes =>
+            prevRecipes.map(recipe =>
+                recipe._id === recipeId ? { ...recipe, likeCount: (recipe.likeCount || 0) + 1 } : recipe
+            )
+        );
+        
 
     } catch (error) {
         console.error("Error liking recipe:", error);
@@ -314,16 +324,24 @@ const handleUnlikeClick = async (recipeId) => {
             }
         });
         console.log("Response data:", response.data);
-
+        
         setLikes(prevLikes => ({
             ...prevLikes,
             [recipeId]: Math.max((prevLikes[recipeId] || 0) - 1, 0)
         }));
 
+        // Update the likeCount property of the corresponding recipe
+        setRecipes(prevRecipes =>
+            prevRecipes.map(recipe =>
+                recipe._id === recipeId ? { ...recipe, likeCount: Math.max((recipe.likeCount || 0) - 1, 0) } : recipe
+            )
+        );
+
     } catch (error) {
         console.error("Error unliking recipe:", error);
     }
 };
+
 
 return (
     <div>
@@ -364,26 +382,26 @@ return (
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px 10px 10px' }}>
                             <Button variant="primary" className="customButton" onClick={() => handleShowReviewModal(recipe._id)}>Review</Button>
-                        {state?.userId !== recipe.creator._id && ( 
+                            {state?.userId !== recipe.creator._id && ( 
                             <div style={{ marginLeft: '10px' }}>
                                 <ToggleButton
-                                    id={`toggle-like-${recipe._id}`}
-                                    type="checkbox"
-                                    className="like-button" 
-                                    variant={likes[recipe._id] ? "primary" : "outline-primary"}
-                                    checked={likes && likes[recipe._id]} 
-                                    onChange={() => {
-                                        if (likes[recipe._id]) {
-                                            handleUnlikeClick(recipe._id);
-                                        } else {
-                                            handleLikeClick(recipe._id);
-                                        }
-                                    }}
-                                >
-                                    {likes[recipe._id] ? `❤️️ ${likes[recipe._id]}` : `♡ ${likes[recipe._id]}`}
-                                </ToggleButton>
+                                id={`toggle-like-${recipe._id}`}
+                                type="checkbox"
+                                className="like-button" 
+                                variant={likes[recipe._id] ? "primary" : "outline-primary"}
+                                value={likes[recipe._id] ? 'liked' : 'unliked'}
+                                onChange={() => {
+                                    if (likes[recipe._id]) {
+                                        handleUnlikeClick(recipe._id);
+                                    } else {
+                                        handleLikeClick(recipe._id);
+                                    }
+                                }}
+                            >
+                                    {likes[recipe._id] ? `❤️️ ${recipe.likeCount}` : `♡ ${recipe.likeCount || 0}`}
+                            </ToggleButton>
                             </div>
-                        )}
+                            )}
                         </div>
                     </div>
                 </Card> 
