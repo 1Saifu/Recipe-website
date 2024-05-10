@@ -5,6 +5,7 @@ const User = require('../models/user');
 async function getAllRecipes(req, res) {
     try {
         const recipes = await Recipe.find().populate('creator', 'username');
+        
         res.json(recipes);
     } catch(error) {
         res.status(500).json({ error: 'Internal server error' });
@@ -112,15 +113,15 @@ async function favoriteRecipe(req, res) {
             return res.status(404).json({ error: 'Recipe not found' });
         }
 
-        const isFavorited = recipe.favorites.includes(userId);
-        if (isFavorited) {
-            return res.status(400).json({ error: 'Recipe already favorited' });
+         if (!recipe.favorites.includes(userId)) {
+            recipe.favorites.push(userId);
+            await recipe.save();
         }
 
-        recipe.favorites.push(userId);
-        await recipe.save();
+        const updatedRecipe = await Recipe.findById(id);
+        const likeCount = updatedRecipe.favorites.length;
 
-        res.json({ message: 'Recipe favorited successfully' });
+        res.json({ message: 'Recipe favorited successfully', likeCount });
 
     } catch (error) {
         res.status(500).json({ error: 'Internal server error' });
@@ -137,15 +138,16 @@ async function unfavoriteRecipe(req, res) {
             return res.status(404).json({ error: 'Recipe not found' });
         }
 
-        const index = recipe.favorites.indexOf(userId);
-        if (index === -1) {
-            return res.status(400).json({ error: 'Recipe is not favorited by the user' });
-        }
+         const index = recipe.favorites.indexOf(userId);
+         if (index !== -1) {
+             recipe.favorites.splice(index, 1);
+             await recipe.save();
+         }
 
-        recipe.favorites.splice(index, 1);
-        await recipe.save();
+         const updatedRecipe = await Recipe.findById(id); 
+         const likeCount = updatedRecipe.favorites.length;
 
-        res.json({ message: 'Recipe unfavorited successfully' });
+        res.json({ message: 'Recipe unfavorited successfully', likeCount });
     } catch (error) {
         console.error('Error unfavoriting recipe:', error);
         res.status(500).json({ error: 'Internal server error' });
