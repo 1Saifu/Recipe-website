@@ -94,7 +94,6 @@ useEffect(() => {
     
             setRecipes(recipesData);
     
-            // Reset likes state when fetching recipes for a new user
             const likesData = {};
             recipesData.forEach(recipe => {
                 likesData[recipe._id] = recipe.liked ? 1 : 0;
@@ -295,13 +294,11 @@ const handleLikeClick = async (recipeId) => {
         });
         console.log("Response data:", response.data);
 
-            // Update the likes state
         setLikes(prevLikes => ({
             ...prevLikes,
             [recipeId]: (prevLikes[recipeId] || 0) + 1
         }));
 
-        // Update the likeCount property of the corresponding recipe
         setRecipes(prevRecipes =>
             prevRecipes.map(recipe =>
                 recipe._id === recipeId ? { ...recipe, likeCount: (recipe.likeCount || 0) + 1 } : recipe
@@ -330,7 +327,6 @@ const handleUnlikeClick = async (recipeId) => {
             [recipeId]: Math.max((prevLikes[recipeId] || 0) - 1, 0)
         }));
 
-        // Update the likeCount property of the corresponding recipe
         setRecipes(prevRecipes =>
             prevRecipes.map(recipe =>
                 recipe._id === recipeId ? { ...recipe, likeCount: Math.max((recipe.likeCount || 0) - 1, 0) } : recipe
